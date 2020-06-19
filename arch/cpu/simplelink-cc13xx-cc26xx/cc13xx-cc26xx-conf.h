@@ -188,11 +188,28 @@
 /* Netstack configuration. */
 #define NETSTACK_CONF_RADIO         prop_mode_driver
 
+#ifdef CC1310_LRM
+
+#ifndef UIP_CONF_ND6_RETRANS_TIMER
+#define UIP_CONF_ND6_RETRANS_TIMER 20000
+#endif
+
+#ifndef CONTIKI_WATCHDOG_CONF_TIMER_TOP
+#define CONTIKI_WATCHDOG_CONF_TIMER_TOP  0x4fffff 
+#endif
+
+#define CSMA_CONF_ACK_WAIT_TIME                (RTIMER_SECOND / 30)
+#define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME (RTIMER_SECOND / 100)
+#define CSMA_CONF_SEND_SOFT_ACK      1
+#else
+/* Otherwise, use standard 50-kbps GFSK-2 */
+
 /* CSMA configuration. */
 #define CSMA_CONF_ACK_WAIT_TIME                (RTIMER_SECOND / 300)
 #define CSMA_CONF_AFTER_ACK_DETECTED_WAIT_TIME (RTIMER_SECOND / 1000)
 #define CSMA_CONF_SEND_SOFT_ACK      1
 
+#endif
 /*----- CC13xx IEEE-mode ----------------------------------------------------*/
 #elif (RF_MODE == RF_MODE_2_4_GHZ) && (SUPPORTS_IEEE_MODE)
 

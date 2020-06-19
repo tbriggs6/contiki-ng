@@ -64,7 +64,14 @@ CONTIKI_CPU_SOURCEFILES += ieee-addr.c      ble-addr.c
 CONTIKI_CPU_SOURCEFILES += ble-beacond.c
 
 ifeq ($(SUPPORTS_PROP_MODE),1)
- CONTIKI_CPU_SOURCEFILES += prop-mode.c prop-settings.c prop-tx-power.c
+
+ifeq ($(CC1310_LRM),1)
+ CONTIKI_CPU_SOURCEFILES += prop-lrm.c
+else
+ CONTIKI_CPU_SOURCEFILES += prop-settings.c
+endif
+
+ CONTIKI_CPU_SOURCEFILES += prop-mode.c prop-tx-power.c
 endif
 
 ifeq ($(SUPPORTS_IEEE_MODE),1)

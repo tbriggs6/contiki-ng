@@ -118,6 +118,10 @@ main(void)
   LOG_INFO_LLADDR(&linkaddr_node_addr);
   LOG_INFO_("\n");
 
+#ifdef CC1310_LRM
+  LOG_INFO("CC1310 LRM Enabled\n");
+#endif
+
 #if NETSTACK_CONF_WITH_IPV6
   {
     uip_ds6_addr_t *lladdr;
