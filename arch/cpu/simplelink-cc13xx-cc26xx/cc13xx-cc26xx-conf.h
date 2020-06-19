@@ -161,7 +161,7 @@
 
 /* Size of each RX buffer in bytes. */
 #ifndef RF_CONF_RX_BUF_SIZE
-#define RF_CONF_RX_BUF_SIZE          144
+#define RF_CONF_RX_BUF_SIZE          146
 #endif
 
 /* Enable/disable BLE beacon. */
@@ -238,10 +238,6 @@
 #else
 #error "Unsupported Device Line defined"
 #endif /* Unsupported device line */
-
-#define prop_mode_driver_max_payload_len      125
-#define ieee_mode_driver_max_payload_len      125
-
 /** @} */
 /*---------------------------------------------------------------------------*/
 /**

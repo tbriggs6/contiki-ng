@@ -113,6 +113,19 @@
 #define STATUS_REJECT_FRAME  0x40  /* bit 6 */
 #define STATUS_CRC_FAIL      0x80  /* bit 7 */
 /*---------------------------------------------------------------------------*/
+/*
+ * The number of bytes appended at the end of an outgoing frame as a footer
+ * Currently fixed at 2 bytes for IEEE 802.15.4 compliance.
+ */
+#define CHECKSUM_LEN 2
+
+/*
+ * The maximum number of bytes this driver can accept from the MAC layer for
+ * transmission or will deliver to the MAC layer after reception. Includes
+ * the MAC header and payload, but not the FCS.
+ */
+#define MAX_PAYLOAD_LEN (127 - CHECKSUM_LEN)
+/*---------------------------------------------------------------------------*/
 #define FRAME_FCF_OFFSET     0
 #define FRAME_SEQNUM_OFFSET  2
 
@@ -423,7 +436,7 @@ init(void)
 static int
 prepare(const void *payload, unsigned short payload_len)
 {
-  if(payload_len > TX_BUF_SIZE || payload_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+  if(payload_len > TX_BUF_SIZE || payload_len > MAX_PAYLOAD_LEN) {
     return RADIO_TX_ERR;
   }
   memcpy(ieee_radio.tx_buf, payload, payload_len);
@@ -435,7 +448,7 @@ transmit(unsigned short transmit_len)
 {
   rf_result_t res;
 
-  if(transmit_len > NETSTACK_RADIO_MAX_PAYLOAD_LEN) {
+  if(transmit_len > MAX_PAYLOAD_LEN) {
     LOG_ERR("Too long\n");
     return RADIO_TX_ERR;
   }
@@ -598,7 +611,7 @@ cca_request(cmd_cca_req_t *cmd_cca_req)
     }
 
     /* Make sure RX is running before we continue, unless we timeout and fail */
-    RTIMER_BUSYWAIT_UNTIL(!rx_is_active(), TIMEOUT_ENTER_RX_WAIT);
+    RTIMER_BUSYWAIT_UNTIL(rx_is_active(), TIMEOUT_ENTER_RX_WAIT);
 
     if(!rx_is_active()) {
       LOG_ERR("CCA request failed to turn on RX, RX status=0x%04X\n", v_cmd_rx.status);
@@ -607,15 +620,24 @@ cca_request(cmd_cca_req_t *cmd_cca_req)
   }
 
   /* Perform the CCA request */
-  stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t *)cmd_cca_req);
+  do {
+    memset(cmd_cca_req, 0x00, sizeof(cmd_cca_req_t));
+    cmd_cca_req->commandNo = CMD_IEEE_CCA_REQ;
+    cmd_cca_req->ccaInfo.ccaState = CCA_STATE_INVALID;
+
+    stat = RF_runImmediateCmd(ieee_radio.rf_handle, (uint32_t *)cmd_cca_req);
+
+    if(stat != RF_StatCmdDoneSuccess) {
+      LOG_ERR("CCA request command failed, stat=0x%02X\n", stat);
+      if(stop_rx) {
+        netstack_stop_rx();
+      }
+      return RF_RESULT_ERROR;
+    }
+  } while(cmd_cca_req->ccaInfo.ccaState == CCA_STATE_INVALID);
 
   if(stop_rx) {
     netstack_stop_rx();
-  }
-
-  if(stat != RF_StatCmdDoneSuccess) {
-    LOG_ERR("CCA request command failed, stat=0x%02X\n", stat);
-    return RF_RESULT_ERROR;
   }
 
   return RF_RESULT_OK;
@@ -822,6 +844,10 @@ get_value(radio_param_t param, radio_value_t *value)
   /* Last link quality */
   case RADIO_PARAM_LAST_LINK_QUALITY:
     *value = (radio_value_t)ieee_radio.last.corr_lqi;
+    return RADIO_RESULT_OK;
+
+  case RADIO_CONST_MAX_PAYLOAD_LEN:
+    *value = (radio_value_t)MAX_PAYLOAD_LEN;
     return RADIO_RESULT_OK;
 
   default:

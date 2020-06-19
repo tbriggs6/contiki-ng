@@ -163,7 +163,7 @@ rpl_set_prefix_from_addr(uip_ipaddr_t *addr, unsigned len, uint8_t flags)
   }
 
   /* Try and initialize prefix */
-  memset(&curr_instance.dag.prefix_info.prefix, 0, sizeof(rpl_prefix_t));
+  memset(&curr_instance.dag.prefix_info.prefix, 0, sizeof(uip_ipaddr_t));
   memcpy(&curr_instance.dag.prefix_info.prefix, addr, (len + 7) / 8);
   curr_instance.dag.prefix_info.length = len;
   curr_instance.dag.prefix_info.lifetime = RPL_ROUTE_INFINITE_LIFETIME;
@@ -264,6 +264,7 @@ const struct routing_driver rpl_lite_driver = {
   rpl_link_callback,
   neighbor_state_changed,
   drop_route,
+  rpl_get_leaf_only,
 };
 /*---------------------------------------------------------------------------*/
 
