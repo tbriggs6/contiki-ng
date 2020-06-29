@@ -59,10 +59,21 @@
 
 /* 1 len byte, 2 bytes CRC */
 #define RADIO_PHY_OVERHEAD         3
+
+#ifdef CC1310_LRM
+// 5kpbs data rate, one byte = 1600us !?!
+
+#define RADIO_BYTE_AIR_TIME       1600
+#define RADIO_DELAY_BEFORE_TX ((unsigned)US_TO_RTIMERTICKS(RADIO_PHY_HEADER_LEN * RADIO_BYTE_AIR_TIME))
+
+#else
 /* 250kbps data rate. One byte = 32us */
 #define RADIO_BYTE_AIR_TIME       32
 /* Delay between GO signal and SFD */
 #define RADIO_DELAY_BEFORE_TX       ((unsigned)US_TO_RTIMERTICKS(81))
+
+#endif
+
 /* Delay between GO signal and start listening.
  * This value is so small because the radio is constantly on within each timeslot. */
 #define RADIO_DELAY_BEFORE_RX       ((unsigned)US_TO_RTIMERTICKS(15))

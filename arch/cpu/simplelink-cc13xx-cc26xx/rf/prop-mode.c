@@ -78,6 +78,7 @@
 #include "sys/log.h"
 #define LOG_MODULE "Radio"
 #define LOG_LEVEL LOG_LEVEL_NONE
+
 /*---------------------------------------------------------------------------*/
 #undef CLAMP
 #define CLAMP(v, vmin, vmax)  (MAX(MIN(v, vmax), vmin))
@@ -140,11 +141,19 @@ typedef enum {
  */
 #define MAX_PAYLOAD_LEN 125
 /*---------------------------------------------------------------------------*/
+#ifdef CC1310_LRM
+/* How long to wait for the RF to enter RX in rf_cmd_ieee_rx */
+#define TIMEOUT_ENTER_RX_WAIT   (RTIMER_SECOND / 128)
+
+/* How long to wait for the rx read entry to become ready */
+#define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 25)
+#else
 /* How long to wait for the RF to enter RX in rf_cmd_ieee_rx */
 #define TIMEOUT_ENTER_RX_WAIT   (RTIMER_SECOND >> 10)
 
 /* How long to wait for the rx read entry to become ready */
 #define TIMEOUT_DATA_ENTRY_BUSY (RTIMER_SECOND / 250)
+#endif
 /*---------------------------------------------------------------------------*/
 /* TX buf configuration */
 #define TX_BUF_HDR_LEN          2
